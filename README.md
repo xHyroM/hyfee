@@ -16,7 +16,7 @@
 
 1. Clone this repository: `git clone https://github.com/xHyroM/hyfee.git`
 2. Navigate to the project directory: `cd hyfee`
-3. Install the dependencies: `pnpm install`
+3. Open the project in your favorite editor
 
 ## Usage
 
