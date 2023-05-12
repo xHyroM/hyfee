@@ -20,8 +20,7 @@
 
 ## Usage
 
-- To build the project, run `pnpm build`
-- To run tests, run `pnpm test`
+- To build the project, run `go build`
 
 ## Contributing
 
