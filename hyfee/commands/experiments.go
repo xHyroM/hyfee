@@ -3,6 +3,8 @@ package commands
 import (
 	"hyros_coffee/handler"
 	"hyros_coffee/hyfee"
+	"hyros_coffee/utils"
+	"strings"
 
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
@@ -58,7 +60,7 @@ func Experiments(bot *hyfee.Bot) handler.Command {
 
 func getExperimentsHandler(bot *hyfee.Bot) handler.CommandHandler {
 	return func(e *events.ApplicationCommandInteractionCreate) error {
-		id := e.SlashCommandInteractionData().String("id")
+		id := e.SlashCommandInteractionData().String("experiment")
 
 		return e.CreateMessage(discord.MessageCreate{
 			Content: "You said: " + id,
@@ -81,11 +83,32 @@ func eligibleExperimentsHandler(bot *hyfee.Bot) handler.CommandHandler {
 
 func autocompleteHandler(bot *hyfee.Bot) handler.AutocompleteHandler {
 	return func(e *events.AutocompleteInteractionCreate) error {
-		return e.Result([]discord.AutocompleteChoice{
-			discord.AutocompleteChoiceString{
-				Name: "test experiments",
-				Value: "test_experiments",
-			},
-		})
+		option := e.Data.String("experiment")
+
+		experiments := utils.GetExperimentKeys()
+
+		result := []discord.AutocompleteChoice{}
+
+		for _, experiment := range experiments {
+			if option == "" || strings.Contains(strings.ToLower(experiment.Label), strings.ToLower(option)) {
+				result = append(result, discord.AutocompleteChoiceString{
+					Name: utils.IfThenElse(
+						len(experiment.Label) > 25,
+						func() string {
+							return experiment.Label[:22]  + "..."
+						},
+						func() string {
+							return experiment.Label
+						}),
+					Value: experiment.Id,
+				})
+			}
+
+			if len(result) == 25 {
+				break
+			}
+		}
+
+		return e.Result(result)
 	}
 }

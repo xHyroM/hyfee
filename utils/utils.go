@@ -17,3 +17,10 @@ func GetFocusedOption(e *events.AutocompleteInteractionCreate) discord.Autocompl
 
 	return focused
 }
+
+func IfThenElse[T any](condition bool, a func() T, b func() T) T {
+	if condition {
+			return a()
+	}
+	return b()
+}
