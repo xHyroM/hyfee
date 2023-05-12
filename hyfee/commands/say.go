@@ -1,8 +1,8 @@
 package commands
 
 import (
-	"hyros_coffe/handler"
-	"hyros_coffe/hyfee"
+	"hyros_coffee/handler"
+	"hyros_coffee/hyfee"
 
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"

@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
-	"hyros_coffe/hyfee"
-	"hyros_coffe/hyfee/commands"
-	"hyros_coffe/hyfee/listeners"
+	"hyros_coffee/hyfee"
+	"hyros_coffee/hyfee/commands"
+	"hyros_coffee/hyfee/listeners"
 	"os"
 	"os/signal"
 	"syscall"
@@ -22,6 +22,7 @@ func main() {
 	bot := hyfee.New()
 
 	bot.Handler.AddCommands(
+		commands.Experiments(bot),
 		commands.Say(bot),
 	)
 

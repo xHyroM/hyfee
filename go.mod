@@ -1,4 +1,4 @@
-module hyros_coffe
+module hyros_coffee
 
 go 1.20
 

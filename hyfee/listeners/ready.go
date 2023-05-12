@@ -1,7 +1,7 @@
 package listeners
 
 import (
-	"hyros_coffe/hyfee"
+	"hyros_coffee/hyfee"
 
 	"github.com/disgoorg/disgo/bot"
 	"github.com/disgoorg/disgo/events"
