@@ -224,8 +224,14 @@ func autocompleteGuilds(bot *hyfee.Bot, e *events.AutocompleteInteractionCreate)
 
 func autocompleteExperiments(e *events.AutocompleteInteractionCreate) error {
 	option := e.Data.String("experiment")
+	subcommand := e.Data.SubCommandName
 
-	experiments := utils.GetExperimentKeys()
+	var experiments []utils.ExperimentKey
+	if *subcommand == "eligible" {
+		experiments = utils.GetExperimentKeys("&kind=guild&has_rollout=true")
+	} else {
+		experiments = utils.GetExperimentKeys("")
+	}
 
 	result := []discord.AutocompleteChoice{}
 

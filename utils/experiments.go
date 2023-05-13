@@ -24,9 +24,9 @@ type ExperimentKey struct {
 	Id string `json:"id"`
 }
 
-func GetExperimentKeys() []ExperimentKey {
+func GetExperimentKeys(query string) []ExperimentKey {
 	if time.Now().Unix()-experimentsKeysCache.Last > 180 {
-		res, e := http.Get("https://api.discord-experiments.xhyrom.dev/v2/experiments?only_keys=true&also_with_unknown_ids=true")
+		res, e := http.Get("https://api.discord-experiments.xhyrom.dev/v2/experiments?only_keys=true&also_with_unknown_ids=true"+query)
 		if e != nil {
 			return []ExperimentKey{}
 		}
