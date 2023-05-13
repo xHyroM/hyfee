@@ -36,3 +36,7 @@ func SnakeCaseToPascalCaseWithSpaces(text string) string {
 
 	return strings.Join(words, " ")
 }
+
+func FormatBool(b bool) string {
+	return IfThenElse(b, func() string { return "Yes" }, func() string { return "No" })
+}

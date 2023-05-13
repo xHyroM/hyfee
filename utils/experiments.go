@@ -1,12 +1,15 @@
 package utils
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/disgoorg/disgo/discord"
 )
 
 type ExperimentsKeyCache struct {
@@ -91,13 +94,60 @@ type ExperimentRolloutPopulationFilter struct {
 	Target int `json:"target"`
 }
 
+type Eligible struct {
+	Eligible bool `json:"eligible"`
+	Bucket EligibleBucket `json:"bucket"`
+	Filters []ExperimentRolloutPopulationFilter `json:"filters"`
+}
+
+type EligibleBucket struct {
+	ExperimentRolloutPopulationBucket
+	Id string `json:"id"`
+}
+
+type ErrorResponse struct {
+	Status int `json:"status"`
+	Message string `json:"message"`
+}
+
 func GetExperiment(name string) (Experiment, error) {
 	res, e := http.Get("https://api.discord-experiments.xhyrom.dev/v2/experiments/" + name)
 	if e != nil {
 		return Experiment{}, errors.New("Error getting experiment")
 	}
 
+	if res.StatusCode != 200 {
+		body := ErrorResponse{}
+		json.NewDecoder(res.Body).Decode(&body)
+
+		return Experiment{}, errors.New(body.Message)
+	}
+
 	body := Experiment{}
+	json.NewDecoder(res.Body).Decode(&body)
+
+	return body, nil
+}
+
+func IsExperimentEligible(id string, guild discord.Guild) (Eligible, error) {
+	payload, _ := json.Marshal(map[string]interface{}{
+		"experiment_id": id,
+		"guild": guild,
+	})
+
+	res, e := http.Post("https://api.discord-experiments.xhyrom.dev/v2/eligible", "application/json", bytes.NewBuffer(payload))
+	if e != nil {
+		return Eligible{}, errors.New("Error checking eligibility")
+	}
+
+	if res.StatusCode != 200 {
+		body := ErrorResponse{}
+		json.NewDecoder(res.Body).Decode(&body)
+
+		return Eligible{}, errors.New(body.Message)
+	}
+
+	body := Eligible{}
 	json.NewDecoder(res.Body).Decode(&body)
 
 	return body, nil
@@ -156,34 +206,15 @@ func (experiment Experiment) FormatPopulation() string {
 		filters := []string{}
 
 		for _, filter := range population.Filters {
-			filters = append(filters, filter.format())
+			filters = append(filters, filter.Format())
 		}
 
 		if len(filters) > 0 {
 			formatted += "**Filters**: " + strings.Join(filters, " and ") + "\n"
 		}
 
-		for bucket, rollout := range population.Buckets {
-			percentage := 0
-			for _, rollout := range rollout.Rollout {
-				percentage += rollout.End - rollout.Start
-			}
-
-			percentage = percentage / 100
-
-			rollouts := []string{}
-			for _, rollout := range rollout.Rollout {
-				rollouts = append(rollouts, strconv.Itoa(rollout.Start) + "-" + strconv.Itoa(rollout.End))
-			}
-
-			var name string
-			if bucket == "none" {
-				name = "None"
-			} else {
-				name = "Treatment " + bucket
-			}
-
-			formatted += "**" + name + "**: " + strconv.Itoa(percentage) + "% (" + strings.Join(rollouts, ", ") + ")\n"
+		for id, bucket := range population.Buckets {
+			formatted += bucket.Format(id)
 		}
 
 		formatted += "\n"
@@ -192,7 +223,34 @@ func (experiment Experiment) FormatPopulation() string {
 	return formatted
 }
 
-func (filter ExperimentRolloutPopulationFilter) format() string {
+func (bucket ExperimentRolloutPopulationBucket) Format(id string) string {
+	formatted := ""
+
+	percentage := 0
+	for _, rollout := range bucket.Rollout {
+		percentage += rollout.End - rollout.Start
+	}
+
+	percentage = percentage / 100
+
+	rollouts := []string{}
+	for _, rollout := range bucket.Rollout {
+		rollouts = append(rollouts, strconv.Itoa(rollout.Start) + "-" + strconv.Itoa(rollout.End))
+	}
+
+	var name string
+	if id == "none" {
+		name = "None"
+	} else {
+		name = "Treatment " + id
+	}
+
+	formatted += "**" + name + "**: " + strconv.Itoa(percentage) + "% (" + strings.Join(rollouts, ", ") + ")\n"
+
+	return formatted
+}
+
+func (filter ExperimentRolloutPopulationFilter) Format() string {
 	switch filter.Type {
 		case "guild_has_feature": {
 			features := []string{}

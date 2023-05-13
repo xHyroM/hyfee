@@ -4,11 +4,13 @@ import (
 	"hyros_coffee/handler"
 	"hyros_coffee/hyfee"
 	"hyros_coffee/utils"
+	"reflect"
 	"strconv"
 	"strings"
 
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
+	"github.com/disgoorg/snowflake/v2"
 )
 
 func Experiments(bot *hyfee.Bot) handler.Command {
@@ -96,13 +98,56 @@ func getExperimentsHandler(bot *hyfee.Bot) handler.CommandHandler {
 }
 
 func eligibleExperimentsHandler(bot *hyfee.Bot) handler.CommandHandler {
-	return func(e *events.ApplicationCommandInteractionCreate) error {
-		id := e.SlashCommandInteractionData().String("id")
-		guild := e.SlashCommandInteractionData().String("guild")
+	return func(event *events.ApplicationCommandInteractionCreate) error {
+		experimentId := event.SlashCommandInteractionData().String("experiment")
+		guild, err := snowflake.Parse(event.SlashCommandInteractionData().String("guild"))
 
-		return e.CreateMessage(discord.MessageCreate{
-			Content: "You said: " + id + " " + guild,
-			Flags: discord.MessageFlagEphemeral,
+		if err != nil {
+			return event.CreateMessage(discord.MessageCreate{
+				Content: "Error: Failed to parse guild id",
+				Flags: discord.MessageFlagEphemeral,
+			})
+		}
+
+		eligible, err := utils.IsExperimentEligible(experimentId, discord.Guild{
+			ID: guild,
+			Features: []discord.GuildFeature{},
+		})
+		if err != nil {
+			return event.CreateMessage(discord.MessageCreate{
+				Content: "Error: " + err.Error(),
+				Flags: discord.MessageFlagEphemeral,
+			})
+		}
+
+		embed := discord.NewEmbedBuilder().
+			SetTitle("Experiment Eligiblity Check").
+			AddField("Experiment Id", experimentId, true).
+			AddField("Guild Id", guild.String(), true).
+			AddField("Eligible", utils.FormatBool(eligible.Eligible), true)
+
+		if !reflect.ValueOf(eligible.Bucket).IsZero() {
+			embed.AddField("Bucket", eligible.Bucket.Format(eligible.Bucket.Id), false)
+		}
+
+		if len(eligible.Filters) > 0 {
+			filters := []string{}
+
+			for _, filter := range eligible.Filters {
+				filters = append(filters, filter.Format())
+			}
+
+			embed.AddField("Filters", strings.Join(filters, " and ") + "\n", false)
+		}
+
+		if eligible.Eligible {
+			embed.SetColor(0x42f554)
+		} else {
+			embed.SetColor(0xeb4034)
+		}
+
+		return event.CreateMessage(discord.MessageCreate{
+			Embeds: []discord.Embed{embed.Build()},
 		})
 	}
 }
