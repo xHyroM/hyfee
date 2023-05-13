@@ -206,7 +206,11 @@ func (filter ExperimentRolloutPopulationFilter) format() string {
 			return "Server Id is in range " + strconv.Itoa(filter.MinId) + " - " + strconv.Itoa(filter.MaxId)
 		}
 		case "guild_member_count_range": {
-			return "Server member count is in range " + strconv.Itoa(filter.MinCount) + " - " + strconv.Itoa(filter.MaxCount)
+			if filter.MaxCount != 0 {
+				return "Server member count is in range " + strconv.Itoa(filter.MinCount) + " - " + strconv.Itoa(filter.MaxCount)
+			} else {
+				return "Server member count is " + strconv.Itoa(filter.MinCount) + "+"
+			}
 		}
 		case "guild_ids": {
 			return "Server Id is " + strings.Join(filter.Ids, " or ")
