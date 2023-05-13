@@ -63,7 +63,7 @@ func (b *Bot) Start() {
 		b.Logger.Error("Failed to open gateway", err)
 	}
 
-	if err := http.ListenAndServe(":8080", b.HTTPServer); err != nil {
+	if err := http.ListenAndServe(":"+os.Getenv("MUX_SERVER_HTTP_PORT"), b.HTTPServer); err != nil {
 		b.Logger.Error("Failed to listen and serve", err)
 	}
 
