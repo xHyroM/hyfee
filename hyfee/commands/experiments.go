@@ -102,7 +102,22 @@ func getExperimentsHandler(bot *hyfee.Bot) handler.CommandHandler {
 func eligibleExperimentsHandler(bot *hyfee.Bot) handler.CommandHandler {
 	return func(event *events.ApplicationCommandInteractionCreate) error {
 		experimentId := event.SlashCommandInteractionData().String("experiment")
-		guild, err := snowflake.Parse(event.SlashCommandInteractionData().String("guild"))
+		guildId, err := snowflake.Parse(event.SlashCommandInteractionData().String("guild"))
+
+		user, err := bot.Database.Get(event.User().ID.String())
+		guild := discord.OAuth2Guild{
+			Features: []discord.GuildFeature{},
+		}
+
+		if err == nil {
+			guild = utils.GetGuild(bot.OAuth2Client, bot.Database, event.User().ID, guildId, oauth2.Session{
+				AccessToken: user.AccessToken,
+				RefreshToken: user.RefreshToken,
+				Scopes: user.Scopes,
+				TokenType: user.TokenType,
+				Expiration: user.Expiration,
+			})
+		}	
 
 		if err != nil {
 			return event.CreateMessage(discord.MessageCreate{
@@ -112,8 +127,8 @@ func eligibleExperimentsHandler(bot *hyfee.Bot) handler.CommandHandler {
 		}
 
 		eligible, err := utils.IsExperimentEligible(experimentId, discord.Guild{
-			ID: guild,
-			Features: []discord.GuildFeature{},
+			ID: guildId,
+			Features: guild.Features,
 		})
 		if err != nil {
 			return event.CreateMessage(discord.MessageCreate{
@@ -125,7 +140,7 @@ func eligibleExperimentsHandler(bot *hyfee.Bot) handler.CommandHandler {
 		embed := discord.NewEmbedBuilder().
 			SetTitle("Experiment Eligiblity Check").
 			AddField("Experiment Id", experimentId, true).
-			AddField("Guild Id", guild.String(), true).
+			AddField("Guild Id", guildId.String(), true).
 			AddField("Eligible", utils.FormatBool(eligible.Eligible), true)
 
 		if !reflect.ValueOf(eligible.Bucket).IsZero() {

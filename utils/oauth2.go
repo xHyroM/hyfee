@@ -35,3 +35,15 @@ func GetGuilds(client oauth2.Client, database db.DB, userId snowflake.ID, origin
 
 	return guilds
 }
+
+func GetGuild(client oauth2.Client, database db.DB, userId snowflake.ID, guildId snowflake.ID, originalSession oauth2.Session) discord.OAuth2Guild {
+	guilds := GetGuilds(client, database, userId, originalSession)
+
+	for _, guild := range guilds {
+		if guild.ID == guildId {
+			return guild
+		}
+	}
+
+	return discord.OAuth2Guild{}
+}
