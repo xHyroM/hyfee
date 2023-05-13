@@ -1,13 +1,11 @@
 package main
 
 import (
-	"context"
+	"flag"
 	"hyros_coffee/hyfee"
 	"hyros_coffee/hyfee/commands"
 	"hyros_coffee/hyfee/listeners"
 	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/disgoorg/snowflake/v2"
 	_ "github.com/joho/godotenv/autoload"
@@ -16,32 +14,43 @@ import (
 var (
 	botToken = os.Getenv("DISCORD_TOKEN")
 	guildId, err =	snowflake.Parse("1046534628577640528")
+
+	syncDatabaseTables *bool
+	syncCommands *bool
+	debug *bool
 )
+
+func init() {
+	syncDatabaseTables = flag.Bool("sync-db", false, "Whether to sync the database tables")
+	syncCommands = flag.Bool("sync-commands", false, "Whether to sync the commands")
+	debug = flag.Bool("debug", false, "Whether to enable debug mode")
+	flag.Parse()
+}
 
 func main() {
 	bot := hyfee.New()
 
 	bot.Handler.AddCommands(
+		commands.Auth(bot),
 		commands.Experiments(bot),
 		commands.Say(bot),
 	)
 
 	if err := bot.Setup(
+		hyfee.Config{
+			SyncDatabaseTables: syncDatabaseTables,
+			Debug: debug,
+		},
 		listeners.Ready(bot),
 	); err != nil {
 		bot.Logger.Fatal(err)
 	}
 
-	defer bot.Client.Close(context.TODO())
+	bot.SetupOAuth2()
 
-	bot.Handler.SyncCommands(bot.Client, guildId)
-
-	if err = bot.Start() ; err != nil {
-		bot.Logger.Fatal(err)
+	if *syncCommands {
+		bot.Handler.SyncCommands(bot.Client, guildId)
 	}
 
-	bot.Logger.Info("Bot is running. Press CTRL-C to exit.")
-	s := make(chan os.Signal, 1)
-	signal.Notify(s, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
-	<-s
+	bot.Start()
 }

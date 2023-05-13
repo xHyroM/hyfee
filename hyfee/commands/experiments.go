@@ -10,6 +10,7 @@ import (
 
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
+	"github.com/disgoorg/disgo/oauth2"
 	"github.com/disgoorg/snowflake/v2"
 )
 
@@ -45,6 +46,7 @@ func Experiments(bot *hyfee.Bot) handler.Command {
 							Name: "guild",
 							Description: "The guild id",
 							Required: true,
+							Autocomplete: true,
 						},
 					},
 				},
@@ -154,32 +156,83 @@ func eligibleExperimentsHandler(bot *hyfee.Bot) handler.CommandHandler {
 
 func autocompleteHandler(bot *hyfee.Bot) handler.AutocompleteHandler {
 	return func(e *events.AutocompleteInteractionCreate) error {
-		option := e.Data.String("experiment")
-
-		experiments := utils.GetExperimentKeys()
-
-		result := []discord.AutocompleteChoice{}
-
-		for _, experiment := range experiments {
-			if option == "" || strings.Contains(strings.ToLower(experiment.Label), strings.ToLower(option)) {
-				result = append(result, discord.AutocompleteChoiceString{
-					Name: utils.IfThenElse(
-						len(experiment.Label) > 25,
-						func() string {
-							return experiment.Label[:23]  + ".."
-						},
-						func() string {
-							return experiment.Label
-						}),
-					Value: experiment.Id,
-				})
-			}
-
-			if len(result) == 25 {
-				break
-			}
+		focusedOption := utils.GetFocusedOption(e)
+		
+		if focusedOption.Name == "experiment" {
+			return autocompleteExperiments(e)
 		}
 
-		return e.Result(result)
+		return autocompleteGuilds(bot, e)
 	}
+}
+
+func autocompleteGuilds(bot *hyfee.Bot, e *events.AutocompleteInteractionCreate) error {
+	option := e.Data.String("guild")
+
+	user, err := bot.Database.Get(e.User().ID.String())
+	if err != nil {
+		return err
+	}
+
+	guilds := utils.GetGuilds(bot.OAuth2Client, bot.Database, e.User().ID, oauth2.Session{
+		AccessToken: user.AccessToken,
+		RefreshToken: user.RefreshToken,
+		Scopes: user.Scopes,
+		TokenType: user.TokenType,
+		Expiration: user.Expiration,
+	})
+
+	result := []discord.AutocompleteChoice{}
+
+	for _, guild := range guilds {
+		if option == "" || strings.Contains(strings.ToLower(guild.Name), strings.ToLower(option)) {
+			result = append(result, discord.AutocompleteChoiceString{
+				Name: utils.IfThenElse(
+					len(guild.Name) > 25,
+					func() string {
+						return guild.Name[:23]  + ".."
+					},
+					func() string {
+						return guild.Name
+					}),
+				Value: guild.ID.String(),
+			})
+		}
+
+		if len(result) == 25 {
+			break
+		}
+	}
+
+	return e.Result(result)
+}
+
+func autocompleteExperiments(e *events.AutocompleteInteractionCreate) error {
+	option := e.Data.String("experiment")
+
+	experiments := utils.GetExperimentKeys()
+
+	result := []discord.AutocompleteChoice{}
+
+	for _, experiment := range experiments {
+		if option == "" || strings.Contains(strings.ToLower(experiment.Label), strings.ToLower(option)) {
+			result = append(result, discord.AutocompleteChoiceString{
+				Name: utils.IfThenElse(
+					len(experiment.Label) > 25,
+					func() string {
+						return experiment.Label[:23]  + ".."
+					},
+					func() string {
+						return experiment.Label
+					}),
+				Value: experiment.Id,
+			})
+		}
+
+		if len(result) == 25 {
+			break
+		}
+	}
+
+	return e.Result(result)
 }
