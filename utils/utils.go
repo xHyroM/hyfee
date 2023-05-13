@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"strings"
+
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
 )
@@ -23,4 +25,14 @@ func IfThenElse[T any](condition bool, a func() T, b func() T) T {
 			return a()
 	}
 	return b()
+}
+
+func SnakeCaseToPascalCaseWithSpaces(text string) string {
+	words := strings.Split(text, "_")
+
+	for i, word := range words {
+			words[i] = strings.Title(strings.ToLower(word))
+	}
+
+	return strings.Join(words, " ")
 }
