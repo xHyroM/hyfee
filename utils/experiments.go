@@ -64,6 +64,7 @@ type ExperimentRollout struct {
 	Populations []ExperimentRolloutPopulation `json:"populations"`
 	Revision int `json:"revision"`
 	Overrides map[string][]string `json:"overrides"`
+	OverridesFormatted []ExperimentRolloutPopulation `json:"overrides_formatted"`
 }
 
 type ExperimentRolloutPopulation struct {
@@ -199,25 +200,43 @@ func (experiment Experiment) FormatOverrides() string {
 	return strings.Join(overrides, "\n\n")
 }
 
-func (experiment Experiment) FormatPopulation() string {
+func (experiment Experiment) FormatPopulations() string {
 	formatted := ""
 
 	for _, population := range experiment.Rollout.Populations {
-		filters := []string{}
-
-		for _, filter := range population.Filters {
-			filters = append(filters, filter.Format())
-		}
-
-		if len(filters) > 0 {
-			formatted += "**Filters**: " + strings.Join(filters, " and ") + "\n"
-		}
-
-		for id, bucket := range population.Buckets {
-			formatted += bucket.Format(id)
-		}
-
+		formatted += population.Format()
 		formatted += "\n"
+	}
+
+	return formatted
+}
+
+func (experiment Experiment) FormatOverridesFormatted() string {
+	formatted := ""
+
+	for _, population := range experiment.Rollout.OverridesFormatted {
+		formatted += population.Format()
+		formatted += "\n"
+	}
+
+	return formatted
+}
+
+func (population ExperimentRolloutPopulation) Format() string {
+	formatted := ""
+
+	filters := []string{}
+
+	for _, filter := range population.Filters {
+		filters = append(filters, filter.Format())
+	}
+
+	if len(filters) > 0 {
+		formatted += "**Filters**: " + strings.Join(filters, " and ") + "\n"
+	}
+
+	for id, bucket := range population.Buckets {
+		formatted += bucket.Format(id)
 	}
 
 	return formatted

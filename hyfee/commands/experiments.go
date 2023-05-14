@@ -86,11 +86,15 @@ func getExperimentsHandler(bot *hyfee.Bot) handler.CommandHandler {
 		}
 
 		if len(experiment.Rollout.Populations) > 0 {
-			embed.AddField("Populations", experiment.FormatPopulation(), false)
+			embed.AddField("Populations", experiment.FormatPopulations(), false)
 		}
 
 		if len(experiment.Rollout.Overrides) > 0 {
 			embed.AddField("Overrides", experiment.FormatOverrides(), false)
+		}
+
+		if len(experiment.Rollout.OverridesFormatted) > 0 {
+			embed.AddField("Overrides Formatted", experiment.FormatOverridesFormatted(), false)
 		}
 
 		return event.CreateMessage(discord.MessageCreate{
