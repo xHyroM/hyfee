@@ -55,6 +55,8 @@ func (b *Bot) OAuthHandler(w http.ResponseWriter, r *http.Request) {
 	if err = b.Database.UpdateUser(oauthUser.ID, session); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+
+	w.Write([]byte("You have successfully authenicated yourself with Discord OAuth2. You can now close this tab :D"))
 	return
 }
 
