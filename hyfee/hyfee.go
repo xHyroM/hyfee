@@ -13,6 +13,7 @@ import (
 
 	"github.com/disgoorg/disgo"
 	"github.com/disgoorg/disgo/bot"
+	"github.com/disgoorg/disgo/cache"
 	"github.com/disgoorg/disgo/gateway"
 	"github.com/disgoorg/disgo/oauth2"
 )
@@ -47,7 +48,8 @@ func (b *Bot) Setup(config Config, listeners ...bot.EventListener) (err error) {
 
 	b.Client, err = disgo.New(os.Getenv("DISCORD_TOKEN"),
 		bot.WithLogger(log.New(log.Ldate | log.Ltime | log.Lshortfile)),
-		bot.WithGatewayConfigOpts(gateway.WithIntents(gateway.IntentGuilds)),
+		bot.WithGatewayConfigOpts(gateway.WithIntents(gateway.IntentGuilds, gateway.IntentGuildMessages)),
+		bot.WithCacheConfigOpts(cache.WithCaches(cache.FlagGuilds), cache.WithCaches(cache.FlagChannels)),
 		bot.WithEventListeners(append([]bot.EventListener{b.Handler}, listeners...)...),
 	)
 

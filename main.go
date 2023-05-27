@@ -42,6 +42,7 @@ func main() {
 			Debug: debug,
 		},
 		listeners.Ready(bot),
+		listeners.MessageCreate(bot),
 	); err != nil {
 		bot.Logger.Fatal(err)
 	}
