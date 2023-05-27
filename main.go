@@ -7,6 +7,7 @@ import (
 	"hyros_coffee/hyfee/listeners"
 	"os"
 
+	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/snowflake/v2"
 	_ "github.com/joho/godotenv/autoload"
 )
@@ -17,12 +18,14 @@ var (
 
 	syncDatabaseTables *bool
 	syncCommands *bool
+	syncLinkedRoles *bool
 	debug *bool
 )
 
 func init() {
 	syncDatabaseTables = flag.Bool("sync-db", false, "Whether to sync the database tables")
 	syncCommands = flag.Bool("sync-commands", false, "Whether to sync the commands")
+	syncLinkedRoles = flag.Bool("sync-linked-roles", false, "Whether to sync the linked roles")
 	debug = flag.Bool("debug", false, "Whether to enable debug mode")
 	flag.Parse()
 }
@@ -51,6 +54,17 @@ func main() {
 
 	if *syncCommands {
 		bot.Handler.SyncCommands(bot.Client, guildId)
+	}
+
+	if *syncLinkedRoles {
+		bot.Client.Rest().UpdateApplicationRoleConnectionMetadata(bot.Client.ApplicationID(), []discord.ApplicationRoleConnectionMetadata{
+			{
+				Key: "since",
+				Name: "Since",
+				Description: "Displays the time when the user started monitoring",
+				Type: discord.ApplicationRoleConnectionMetadataTypeDateTimeLessThanOrEqual,
+			},
+		})
 	}
 
 	bot.Start()

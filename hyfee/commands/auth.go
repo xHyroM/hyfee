@@ -27,7 +27,7 @@ func Auth(bot *hyfee.Bot) handler.Command {
 
 func authHandler(bot *hyfee.Bot) handler.CommandHandler {
 	return func(event *events.ApplicationCommandInteractionCreate) error {
-		url := bot.OAuth2Client.GenerateAuthorizationURL(baseUrl+"/callback", 0, *event.GuildID(), false, discord.OAuth2ScopeGuilds, discord.OAuth2ScopeIdentify)
+		url := bot.OAuth2Client.GenerateAuthorizationURL(baseUrl+"/callback", discord.PermissionsNone, *event.GuildID(), false, discord.OAuth2ScopeGuilds, discord.OAuth2ScopeIdentify)
 
 		return event.CreateMessage(discord.MessageCreate{
 			Content: "Click [here](" + url + ") to authenicate yourself with Discord OAuth2",

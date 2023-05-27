@@ -45,6 +45,7 @@ func New() *Bot {
 func (b *Bot) Setup(config Config, listeners ...bot.EventListener) (err error) {
 	b.HTTPServer = http.NewServeMux()
 	b.HTTPServer.HandleFunc("/callback", b.OAuthHandler)
+	b.HTTPServer.HandleFunc("/linked-roles", b.LinkedRolesHandler)
 
 	b.Client, err = disgo.New(os.Getenv("DISCORD_TOKEN"),
 		bot.WithLogger(log.New(log.Ldate | log.Ltime | log.Lshortfile)),
@@ -58,6 +59,10 @@ func (b *Bot) Setup(config Config, listeners ...bot.EventListener) (err error) {
 	}
 
 	return err
+}
+
+func (b *Bot) SetupOAuth2() {
+	b.OAuth2Client = oauth2.New(b.Client.ApplicationID(), os.Getenv("CLIENT_SECRET"))
 }
 
 func (b *Bot) Start() {
