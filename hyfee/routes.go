@@ -33,7 +33,7 @@ func (b *Bot) OAuthHandler(w http.ResponseWriter, r *http.Request) {
 	
 	if utils.Contains(session.Scopes, discord.OAuth2ScopeRoleConnectionsWrite) {
 		connection, err := b.OAuth2Client.GetApplicationRoleConnection(session, b.Client.ApplicationID())
-		if err != nil {
+		if err == nil {
 			if _, err := b.OAuth2Client.UpdateApplicationRoleConnection(session, b.Client.ApplicationID(), discord.ApplicationRoleConnectionUpdate{
 				PlatformName: json.Ptr("Monitored"),
 				Metadata: json.Ptr(map[string]string {
