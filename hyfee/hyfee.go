@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/disgoorg/log"
+	"github.com/redis/go-redis/v9"
 
 	"github.com/disgoorg/disgo"
 	"github.com/disgoorg/disgo/bot"
@@ -26,6 +27,7 @@ type Bot struct {
 	Handler *handler.Handler
 	Database db.DB
 	HTTPServer *http.ServeMux
+	RedisClient *redis.Client
 }
 
 type Config struct {
@@ -47,9 +49,15 @@ func (b *Bot) Setup(config Config, listeners ...bot.EventListener) (err error) {
 	b.HTTPServer.HandleFunc("/callback", b.OAuthHandler)
 	b.HTTPServer.HandleFunc("/linked-roles", b.LinkedRolesHandler)
 
+	b.RedisClient = redis.NewClient(&redis.Options{
+		Addr: os.Getenv("REDIS_ADDRESS"),
+		Password: os.Getenv("REDIS_PASSWORD"),
+		DB: 0,
+	})
+
 	b.Client, err = disgo.New(os.Getenv("DISCORD_TOKEN"),
 		bot.WithLogger(log.New(log.Ldate | log.Ltime | log.Lshortfile)),
-		bot.WithGatewayConfigOpts(gateway.WithIntents(gateway.IntentGuilds, gateway.IntentGuildMessages)),
+		bot.WithGatewayConfigOpts(gateway.WithIntents(gateway.IntentGuilds, gateway.IntentGuildMessages, gateway.IntentGuildPresences)),
 		bot.WithCacheConfigOpts(cache.WithCaches(cache.FlagGuilds), cache.WithCaches(cache.FlagChannels)),
 		bot.WithEventListeners(append([]bot.EventListener{b.Handler}, listeners...)...),
 	)
