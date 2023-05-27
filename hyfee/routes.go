@@ -32,14 +32,27 @@ func (b *Bot) OAuthHandler(w http.ResponseWriter, r *http.Request) {
 
 	
 	if utils.Contains(session.Scopes, discord.OAuth2ScopeRoleConnectionsWrite) {
-		if _, err := b.OAuth2Client.UpdateApplicationRoleConnection(session, b.Client.ApplicationID(), discord.ApplicationRoleConnectionUpdate{
-			PlatformName: json.Ptr("Monitored"),
-			Metadata: json.Ptr(map[string]string {
-				"since": time.Now().UTC().Format(time.RFC3339),
-			}),
-		}); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+		connection, err := b.OAuth2Client.GetApplicationRoleConnection(session, b.Client.ApplicationID())
+		if err != nil {
+			if _, err := b.OAuth2Client.UpdateApplicationRoleConnection(session, b.Client.ApplicationID(), discord.ApplicationRoleConnectionUpdate{
+				PlatformName: json.Ptr("Monitored"),
+				Metadata: json.Ptr(map[string]string {
+					"since": time.Now().UTC().Format(time.RFC3339),
+				}),
+			}); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		} else {
+			if _, err := b.OAuth2Client.UpdateApplicationRoleConnection(session, b.Client.ApplicationID(), discord.ApplicationRoleConnectionUpdate{
+				PlatformName: json.Ptr("Monitored"),
+				Metadata: json.Ptr(map[string]string {
+					"since": connection.Metadata["since"],
+				}),
+			}); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 		}
 	}
 

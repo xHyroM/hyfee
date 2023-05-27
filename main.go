@@ -60,7 +60,7 @@ func main() {
 		bot.Client.Rest().UpdateApplicationRoleConnectionMetadata(bot.Client.ApplicationID(), []discord.ApplicationRoleConnectionMetadata{
 			{
 				Key: "since",
-				Name: "Since",
+				Name: "since",
 				Description: "Displays the time when the user started monitoring",
 				Type: discord.ApplicationRoleConnectionMetadataTypeDateTimeLessThanOrEqual,
 			},
