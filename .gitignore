@@ -277,3 +277,4 @@ modules.xml
 # End of https://www.toptal.com/developers/gitignore/api/go,visualstudiocode,goland,goland+all,goland+iml,dotenv
 
 data/
+tests/
