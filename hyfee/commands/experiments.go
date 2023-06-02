@@ -48,6 +48,11 @@ func Experiments(bot *hyfee.Bot) handler.Command {
 							Required: true,
 							Autocomplete: true,
 						},
+						discord.ApplicationCommandOptionInt{
+							Name: "member_count",
+							Description: "Member count (not required, will be done automatically if widgets)",
+							Required: false,
+						},
 					},
 				},
 			},
@@ -106,6 +111,7 @@ func getExperimentsHandler(bot *hyfee.Bot) handler.CommandHandler {
 func eligibleExperimentsHandler(bot *hyfee.Bot) handler.CommandHandler {
 	return func(event *events.ApplicationCommandInteractionCreate) error {
 		experimentId := event.SlashCommandInteractionData().String("experiment")
+		memberCount, isMemberCountProvided := event.SlashCommandInteractionData().OptInt("member_count")
 		guildId, err := snowflake.Parse(event.SlashCommandInteractionData().String("guild"))
 
 		user, err := bot.Database.Get(event.User().ID.String())
@@ -130,10 +136,16 @@ func eligibleExperimentsHandler(bot *hyfee.Bot) handler.CommandHandler {
 			})
 		}
 
-		eligible, err := utils.IsExperimentEligible(experimentId, discord.Guild{
+		body := discord.Guild{
 			ID: guildId,
 			Features: guild.Features,
-		})
+		}
+
+		if isMemberCountProvided {
+			body.MemberCount = memberCount
+		}
+
+		eligible, err := utils.IsExperimentEligible(experimentId, body)
 		if err != nil {
 			return event.CreateMessage(discord.MessageCreate{
 				Content: "Error: " + err.Error(),
