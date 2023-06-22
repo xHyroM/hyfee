@@ -26,7 +26,8 @@ type Bot struct {
 	Logger log.Logger
 	Handler *handler.Handler
 	Database db.DB
-	HTTPServer *http.ServeMux
+	HTTPHandler *http.ServeMux
+	HTTPServer *http.Server
 	RedisClient *redis.Client
 }
 
@@ -45,9 +46,9 @@ func New() *Bot {
 }
 
 func (b *Bot) Setup(config Config, listeners ...bot.EventListener) (err error) {
-	b.HTTPServer = http.NewServeMux()
-	b.HTTPServer.HandleFunc("/callback", b.OAuthHandler)
-	b.HTTPServer.HandleFunc("/linked-roles", b.LinkedRolesHandler)
+	b.HTTPHandler = http.NewServeMux()
+	b.HTTPHandler.HandleFunc("/callback", b.OAuthHandler)
+	b.HTTPHandler.HandleFunc("/linked-roles", b.LinkedRolesHandler)
 
 	b.RedisClient = redis.NewClient(&redis.Options{
 		Addr: os.Getenv("REDIS_ADDRESS"),
@@ -78,13 +79,15 @@ func (b *Bot) Start() {
 		b.Logger.Error("Failed to open gateway", err)
 	}
 
-	if err := http.ListenAndServe(":"+os.Getenv("MUX_SERVER_HTTP_PORT"), b.HTTPServer); err != nil {
+	b.HTTPServer = &http.Server{Addr: ":"+os.Getenv("MUX_SERVER_HTTP_PORT"), Handler: b.HTTPHandler}
+	if err := b.HTTPServer.ListenAndServe(); err != nil {
 		b.Logger.Error("Failed to listen and serve", err)
 	}
 
 	defer func() {
 		b.Client.Close(context.TODO())
 		b.Database.Close()
+		b.HTTPServer.Shutdown(context.TODO())
 	}()
 
 	b.Logger.Info("Bot is running. Press CTRL-C to exit.")

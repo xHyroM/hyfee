@@ -26,7 +26,7 @@ type ExperimentKey struct {
 
 func GetExperimentKeys(query string) []ExperimentKey {
 	if time.Now().Unix()-experimentsKeysCache.Last > 180 {
-		res, e := http.Get("https://api.discord-experiments.xhyrom.dev/v2/experiments?only_keys=true&also_with_unknown_ids=true"+query)
+		res, e := http.Get("https://api.distools.xhyrom.dev/v2/experiments?only_keys=true&also_with_unknown_ids=true"+query)
 		if e != nil {
 			return []ExperimentKey{}
 		}
@@ -112,7 +112,7 @@ type ErrorResponse struct {
 }
 
 func GetExperiment(name string) (Experiment, error) {
-	res, e := http.Get("https://api.discord-experiments.xhyrom.dev/v2/experiments/" + name)
+	res, e := http.Get("https://api.distools.xhyrom.dev/v2/experiments/" + name)
 	if e != nil {
 		return Experiment{}, errors.New("Error getting experiment")
 	}
@@ -136,7 +136,7 @@ func IsExperimentEligible(id string, guild discord.Guild) (Eligible, error) {
 		"guild": guild,
 	})
 
-	res, e := http.Post("https://api.discord-experiments.xhyrom.dev/v2/eligible", "application/json", bytes.NewBuffer(payload))
+	res, e := http.Post("https://api.distools.xhyrom.dev/v2/eligible", "application/json", bytes.NewBuffer(payload))
 	if e != nil {
 		return Eligible{}, errors.New("Error checking eligibility")
 	}
