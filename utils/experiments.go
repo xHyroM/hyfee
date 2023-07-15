@@ -170,7 +170,7 @@ func (experiment Experiment) FormatDescription() string {
 	formatted := ""
 
 	for _, desc := range experiment.Data.Description {
-		if desc == "Control" {
+		if !strings.Contains(desc, ":") {
 			continue
 		}
 
