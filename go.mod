@@ -2,8 +2,6 @@ module hyros_coffee
 
 go 1.21
 
-toolchain go1.22.1
-
 require (
 	github.com/disgoorg/disgo v0.17.2
 	github.com/disgoorg/json v1.1.0
