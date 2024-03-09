@@ -10,12 +10,11 @@ import (
 
 func MessageCreate(b *hyfee.Bot) bot.EventListener {
 	return bot.NewListenerFunc(func(event bot.Event) {
-		switch event.(type) {
+		switch event := event.(type) {
 			case *events.MessageCreate:
 				// Crosspost messages in datamining category
-				event := event.(*events.MessageCreate)
 				channel, ok := event.Channel()
-				if ok != true {
+				if !ok {
 					b.Logger.Error("Failed to get channel")
 					return
 				}

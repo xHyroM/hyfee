@@ -27,7 +27,7 @@ func Say(bot *hyfee.Bot) handler.Command {
 	}
 }
 
-func sayHandler(bot *hyfee.Bot) handler.CommandHandler {
+func sayHandler(_ *hyfee.Bot) handler.CommandHandler {
 	return func(e *events.ApplicationCommandInteractionCreate) error {
 		message := e.SlashCommandInteractionData().String("message")
 

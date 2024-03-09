@@ -68,7 +68,7 @@ func Experiments(bot *hyfee.Bot) handler.Command {
 	}
 }
 
-func getExperimentsHandler(bot *hyfee.Bot) handler.CommandHandler {
+func getExperimentsHandler(_ *hyfee.Bot) handler.CommandHandler {
 	return func(event *events.ApplicationCommandInteractionCreate) error {
 		id := event.SlashCommandInteractionData().String("experiment")
 
@@ -112,7 +112,7 @@ func eligibleExperimentsHandler(bot *hyfee.Bot) handler.CommandHandler {
 	return func(event *events.ApplicationCommandInteractionCreate) error {
 		experimentId := event.SlashCommandInteractionData().String("experiment")
 		memberCount, isMemberCountProvided := event.SlashCommandInteractionData().OptInt("member_count")
-		guildId, err := snowflake.Parse(event.SlashCommandInteractionData().String("guild"))
+		guildId, _ := snowflake.Parse(event.SlashCommandInteractionData().String("guild"))
 
 		user, err := bot.Database.Get(event.User().ID.String())
 		guild := discord.OAuth2Guild{
@@ -246,7 +246,7 @@ func autocompleteGuilds(bot *hyfee.Bot, e *events.AutocompleteInteractionCreate)
 		}
 	}
 
-	return e.Result(result)
+	return e.AutocompleteResult(result)
 }
 
 func autocompleteExperiments(e *events.AutocompleteInteractionCreate) error {
@@ -282,5 +282,5 @@ func autocompleteExperiments(e *events.AutocompleteInteractionCreate) error {
 		}
 	}
 
-	return e.Result(result)
+	return e.AutocompleteResult(result)
 }

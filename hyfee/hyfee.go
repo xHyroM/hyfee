@@ -4,6 +4,7 @@ import (
 	"context"
 	"hyros_coffee/db"
 	"hyros_coffee/handler"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -57,7 +58,7 @@ func (b *Bot) Setup(config Config, listeners ...bot.EventListener) (err error) {
 	})
 
 	b.Client, err = disgo.New(os.Getenv("DISCORD_TOKEN"),
-		bot.WithLogger(log.New(log.Ldate | log.Ltime | log.Lshortfile)),
+		bot.WithLogger(slog.Default()),
 		bot.WithGatewayConfigOpts(gateway.WithIntents(gateway.IntentGuilds, gateway.IntentGuildMessages, gateway.IntentGuildPresences)),
 		bot.WithCacheConfigOpts(cache.WithCaches(cache.FlagGuilds), cache.WithCaches(cache.FlagChannels)),
 		bot.WithEventListeners(append([]bot.EventListener{b.Handler}, listeners...)...),
